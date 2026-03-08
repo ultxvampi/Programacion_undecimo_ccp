@@ -19,5 +19,5 @@ int main(){
  double v = (y/t) - (gravedad*t/2);
  /// Calculo altura (h) desde ecuaciones de caída libreeeee
  double h = (v*v)/(2*gravedad);
- cout << "La altura desde la que se lanzó fue de: " << h << "metros";
+ cout << "La altura desde la que se lanzo fue de: " << h << " metros";
  }
