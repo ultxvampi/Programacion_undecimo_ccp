@@ -15,6 +15,9 @@ int main(){
  if ( y <= 0){
  cout << "La altura de la ventana no debe ser negativa";
  };
+ if ( h <= 0){
+ cout << " los valores de t y y implican que h es <= 0 y esto no es posible...";
+ };
  /// Calculo la velocidad (v) con ecuaciones de movimiento rectilineo uniforme acelerado ;b
  double v = (y/t) - (gravedad*t/2);
  /// Calculo altura (h) desde ecuaciones de caída libreeeee
