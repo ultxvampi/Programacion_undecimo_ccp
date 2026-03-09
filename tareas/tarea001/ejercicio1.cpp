@@ -19,7 +19,7 @@ int main(){
  cout << " los valores de t y y implican que h es <= 0 y esto no es posible...";
  };
  /// Calculo la velocidad (v) con ecuaciones de movimiento rectilineo uniforme acelerado ;b
- double v = (y/t) - (gravedad*t/2);
+ double v = (y/t) - (gravedad*t*t/2);
  /// Calculo altura (h) desde ecuaciones de caída libreeeee
  double h = (v*v)/(2*gravedad);
  cout << "La altura desde la que se lanzo fue de: " << h << " metros";
