@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MISSION CONTROL · Telemetría</title>
+<style>
+  :root {
+    --bg-void:      #07090c;
+    --bg-panel:     #0d1117;
+    --bg-panel-2:   #11161d;
+    --line:         #1d2530;
+    --line-bright:  #2a3441;
+    --text-hi:      #e8edf3;
+    --text-mid:     #8b97a8;
+    --text-low:     #4a5568;
+    --nominal:      #3ee08c;
+    --warning:      #ffb648;
+    --critical:     #ff5263;
+    --signal-blue:  #4fb3ff;
+    --mono: 'JetBrains Mono', 'SF Mono', 'Roboto Mono', ui-monospace, monospace;
+    --sans: 'Inter', -apple-system, 'Segoe UI', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg-void);
+    background-image:
+      radial-gradient(ellipse 80% 50% at 50% -20%, rgba(79,179,255,0.07), transparent),
+      repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(255,255,255,0.012) 40px);
+    color: var(--text-hi);
+    font-family: var(--sans);
+    min-height: 100vh;
+    padding: 20px;
+  }
+
+  /* ---------- HEADER ---------- */
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    border-bottom: 1px solid var(--line-bright);
+    padding-bottom: 16px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .header-title {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+  }
+  .header-title h1 {
+    font-family: var(--mono);
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: var(--text-hi);
+  }
+  .header-title .subtitle {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text-low);
+    letter-spacing: 0.08em;
+  }
+  .conn-status {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    font-family: var(--mono);
+    font-size: 12px;
+  }
+  .conn-pill {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 6px 12px;
+    border: 1px solid var(--line-bright);
+    border-radius: 3px;
+    background: var(--bg-panel);
+  }
+  .dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--text-low);
+    box-shadow: 0 0 0 0 transparent;
+  }
+  .dot.live { background: var(--nominal); box-shadow: 0 0 8px var(--nominal); animation: pulse 1.6s ease-in-out infinite; }
+  .dot.stale { background: var(--warning); box-shadow: 0 0 8px var(--warning); }
+  .dot.dead { background: var(--critical); box-shadow: 0 0 8px var(--critical); }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+  .packet-count { color: var(--text-mid); }
+  .packet-count b { color: var(--text-hi); font-weight: 600; }
+
+  /* ---------- LAYOUT ---------- */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 14px;
+  }
+  @media (max-width: 980px) {
+    .grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 560px) {
+    .grid { grid-template-columns: 1fr; }
+  }
+
+  .panel {
+    background: var(--bg-panel);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    position: relative;
+    overflow: hidden;
+  }
+  .panel::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 2px;
+    background: var(--status-color, var(--line-bright));
+    transition: background 0.4s;
+  }
+
+  /* ---------- METRIC CARD ---------- */
+  .metric {
+    padding: 16px 18px;
+  }
+  .metric-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: var(--text-low);
+    text-transform: uppercase;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  .metric-tag {
+    font-size: 9px;
+    padding: 2px 6px;
+    border-radius: 2px;
+    border: 1px solid var(--line-bright);
+    color: var(--text-low);
+  }
+  .metric-value {
+    font-family: var(--mono);
+    font-size: 32px;
+    font-weight: 600;
+    line-height: 1;
+    color: var(--text-hi);
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+  }
+  .metric-unit {
+    font-size: 14px;
+    color: var(--text-mid);
+    font-weight: 400;
+  }
+  .metric-sub {
+    margin-top: 8px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-low);
+  }
+  .metric-value.na { color: var(--text-low); font-size: 20px; }
+
+  /* ---------- SECTION TITLES ---------- */
+  .section-title {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-low);
+    margin: 26px 0 10px 2px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--line);
+  }
+
+  /* ---------- CHARTS ---------- */
+  .chart-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 14px;
+  }
+  @media (max-width: 980px) { .chart-row { grid-template-columns: 1fr; } }
+
+  .chart-panel {
+    padding: 14px 16px 10px;
+  }
+  .chart-title {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-mid);
+    letter-spacing: 0.06em;
+    margin-bottom: 8px;
+  }
+  canvas { display: block; width: 100%; }
+
+  /* ---------- GPS + LOG ROW ---------- */
+  .bottom-row {
+    display: grid;
+    grid-template-columns: 1fr 1.4fr;
+    gap: 14px;
+  }
+  @media (max-width: 980px) { .bottom-row { grid-template-columns: 1fr; } }
+
+  .gps-panel { padding: 16px 18px; }
+  .gps-coords {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--text-hi);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px 18px;
+    margin-top: 12px;
+  }
+  .gps-coords div span { display: block; color: var(--text-low); font-size: 10px; letter-spacing: 0.08em; margin-bottom: 3px; }
+  .fix-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 3px;
+    border: 1px solid var(--line-bright);
+  }
+
+  /* ---------- LOG ---------- */
+  .log-panel {
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+  }
+  .log-list {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    color: var(--text-mid);
+    overflow-y: auto;
+    max-height: 220px;
+    display: flex;
+    flex-direction: column-reverse;
+  }
+  .log-list::-webkit-scrollbar { width: 6px; }
+  .log-list::-webkit-scrollbar-thumb { background: var(--line-bright); border-radius: 3px; }
+  .log-row {
+    display: grid;
+    grid-template-columns: 80px 1fr;
+    gap: 10px;
+    padding: 3px 0;
+    border-bottom: 1px solid var(--bg-panel-2);
+  }
+  .log-row .t { color: var(--text-low); }
+
+  /* ---------- FOOTER ---------- */
+  .footer {
+    margin-top: 24px;
+    padding-top: 14px;
+    border-top: 1px solid var(--line);
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-low);
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .footer a { color: var(--signal-blue); text-decoration: none; }
+  .footer a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-title">
+    <h1>CENTRO DE CONTROL</h1>
+    <span class="subtitle"> · COHETERÍA - ARTEMISA </span>
+  </div>
+  <div class="conn-status">
+    <div class="conn-pill">
+      <div class="dot dead" id="connDot"></div>
+      <span id="connLabel">SIN CONEXIÓN</span>
+    </div>
+    <div class="packet-count">PAQUETES: <b id="packetCount">0</b></div>
+  </div>
+</div>
+
+<!-- MÉTRICAS PRINCIPALES -->
+<div class="grid">
+  <div class="panel" id="cardTemp">
+    <div class="metric">
+      <div class="metric-label">Temperatura <span class="metric-tag">BME280</span></div>
+      <div class="metric-value na" id="vTemp">N/D</div>
+      <div class="metric-sub" id="vTempSub">esperando datos…</div>
+    </div>
+  </div>
+  <div class="panel" id="cardPres">
+    <div class="metric">
+      <div class="metric-label">Presión <span class="metric-tag">BME280</span></div>
+      <div class="metric-value na" id="vPres">N/D</div>
+      <div class="metric-sub" id="vPresSub">esperando datos…</div>
+    </div>
+  </div>
+  <div class="panel" id="cardAlt">
+    <div class="metric">
+      <div class="metric-label">Altitud (baro) <span class="metric-tag">CALC</span></div>
+      <div class="metric-value na" id="vAlt">N/D</div>
+      <div class="metric-sub" id="vAltSub">máx: —</div>
+    </div>
+  </div>
+  <div class="panel" id="cardAire">
+    <div class="metric">
+      <div class="metric-label">Calidad de aire <span class="metric-tag">MQ-x</span></div>
+      <div class="metric-value na" id="vAire">N/D</div>
+      <div class="metric-sub" id="vAireSub">esperando datos…</div>
+    </div>
+  </div>
+</div>
+
+<!-- GRÁFICAS -->
+<div class="section-title">SERIES EN VIVO</div>
+<div class="chart-row">
+  <div class="panel chart-panel">
+    <div class="chart-title">TEMPERATURA (°C)</div>
+    <canvas id="chartTemp" height="120"></canvas>
+  </div>
+  <div class="panel chart-panel">
+    <div class="chart-title">ALTITUD BAROMÉTRICA (m)</div>
+    <canvas id="chartAlt" height="120"></canvas>
+  </div>
+  <div class="panel chart-panel">
+    <div class="chart-title">CALIDAD DE AIRE (ppm est.)</div>
+    <canvas id="chartAire" height="120"></canvas>
+  </div>
+</div>
+
+<!-- GPS + LOG -->
+<div class="section-title">POSICIÓN GPS Y REGISTRO</div>
+<div class="bottom-row">
+  <div class="panel gps-panel">
+    <div class="metric-label">
+      GPS
+      <span class="fix-badge" id="fixBadge">SIN FIX</span>
+    </div>
+    <div class="gps-coords">
+      <div><span>LATITUD</span><span id="vLat">—</span></div>
+      <div><span>LONGITUD</span><span id="vLon">—</span></div>
+      <div><span>ALTITUD GPS</span><span id="vAltGps">—</span></div>
+      <div><span>SATÉLITES</span><span id="vSats">—</span></div>
+    </div>
+    <div class="metric-sub" style="margin-top:14px;">
+      <a id="mapsLink" href="#" target="_blank" style="color:var(--signal-blue); text-decoration:none;">Ver última posición en Google Maps →</a>
+    </div>
+  </div>
+
+  <div class="panel log-panel">
+    <div class="metric-label">REGISTRO DE PAQUETES <span class="metric-tag" id="csvName">—</span></div>
+    <div class="log-list" id="logList"></div>
+  </div>
+</div>
+
+<div class="footer">
+  <span>Histórico completo guardado en CSV en el servidor (carpeta <code>/data</code>) para análisis post-vuelo.</span>
+  <span>Servidor local · <span id="serverClock">--:--:--</span></span>
+</div>
+
+<script src="dashboard.js"></script>
+</body>
+</html>

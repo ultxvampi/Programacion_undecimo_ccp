@@ -1,0 +1,11 @@
+1.c
+2.b
+3.b
+4.c
+5.b
+6. Se está imprimiendo el valor de b y no el mcd como tal, el que debería imprimir
+es el último divisor antes de 0.
+7.c
+8.c
+9.c
+10.a
