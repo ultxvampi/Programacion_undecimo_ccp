@@ -47,11 +47,11 @@ class EstacionMeteorologica {
         return *max_element(lecturas.begin(), lecturas.end());
     }
 
-    string getNombreEstacion() {
+    string getNombre() {
         return nombre;
     }
 
-    int getCantidadLecturas() {
+    int getCantidad() {
         return lecturas.size();
     }
 };
@@ -81,7 +81,7 @@ int main() {
         }
 
         if (opcion == "promedio") {
-            if (estacion.getCantidadLecturas() == 0) {
+            if (estacion.getCantidad() == 0) {
                 cout << "Sin lecturas registradas." << endl;
             } else {
                 cout << "Promedio: " << estacion.promedio() << endl;
@@ -89,7 +89,7 @@ int main() {
         }
 
         if (opcion == "maxima") {
-            if (estacion.getCantidadLecturas() == 0) {
+            if (estacion.getCantidad() == 0) {
                 cout << "Sin lecturas registradas." << endl;
             } else {
                 cout << "Maxima: " << estacion.maxima() << endl;
@@ -97,8 +97,8 @@ int main() {
         }
 
         if (opcion == "cantidad") {
-            cout << estacion.getNombreEstacion() << " - lecturas registradas: " 
-                 << estacion.getCantidadLecturas() << endl;
+            cout << estacion.getNombre() << " - lecturas registradas: " 
+                 << estacion.getCantidad() << endl;
         }
     }
 
