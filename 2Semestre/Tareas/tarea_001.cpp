@@ -11,13 +11,10 @@ class EstacionMeteorologica {
     vector<double> lecturas;
 
  public:
-
-    // Constructor por defecto
     EstacionMeteorologica() {
         this->nombre = "Estacion sin nombre";
     }
-
-    // Constructor parametrizado
+    
     EstacionMeteorologica(string nombre) {
         this->nombre = nombre;
     }
