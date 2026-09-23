@@ -18,7 +18,7 @@ public:
      }
 };
 
-class Perro : publi Mascota {
+class Perro : public Mascota {
 private:
      string raza;
 public: 
@@ -27,6 +27,7 @@ public:
         this-> raza = raza;
      }
      void mostrar(){
-        Mascota::mostrar
+        Mascota::mostrar();
+        cout << raza << '\n';
      }
 }
