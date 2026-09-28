@@ -8,7 +8,7 @@ protected:
      int edad;
 
 public:
-     Mascotas(string nombre, int edad) {
+     Mascota(string nombre, int edad) {
         this->nombre = nombre;
         this->edad = edad;
      }
